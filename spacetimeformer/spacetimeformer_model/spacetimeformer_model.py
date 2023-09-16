@@ -312,6 +312,22 @@ class Spacetimeformer_Forecaster(stf.Forecaster):
         self.scheduler.step()
         return {"loss": outs["loss"].mean()}
 
+    # def configure_optimizers(self):
+    #     self.optimizer = torch.optim.AdamW(
+    #         self.parameters(),
+    #         lr=self.base_lr,
+    #         weight_decay=self.l2_coeff,
+    #     )
+    #     self.scheduler = stf.lr_scheduler.WarmupReduceLROnPlateau(
+    #         self.optimizer,
+    #         init_lr=self.init_lr,
+    #         peak_lr=self.base_lr,
+    #         warmup_steps=self.warmup_steps,
+    #         patience=3,
+    #         factor=self.decay_factor,
+    #     )
+    #     return [self.optimizer], [self.scheduler]
+
     def configure_optimizers(self):
         self.optimizer = torch.optim.AdamW(
             self.parameters(),
@@ -326,7 +342,15 @@ class Spacetimeformer_Forecaster(stf.Forecaster):
             patience=3,
             factor=self.decay_factor,
         )
-        return [self.optimizer], [self.scheduler]
+        monitor = 'val/loss'
+
+        return {
+            "optimizer": self.optimizer,
+            "lr_scheduler": {
+                "scheduler": self.scheduler,
+                "monitor": monitor
+            }
+        }
 
     @classmethod
     def add_cli(self, parser):
